@@ -1,4 +1,4 @@
-console.log("User routes loaded");
+// console.log("User routes loaded");
 import { Router } from "express";
 import * as userController from "./user.controller";
 import { authMiddleware } from "../../middlewares/auth.middleware";

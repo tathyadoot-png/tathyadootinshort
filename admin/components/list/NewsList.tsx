@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { apiRequest } from "@/lib/api";
+import { apiRequest } from "@/lib/api/api";
 
 interface News {
   _id: string;

@@ -8,10 +8,24 @@ import { getTrendingNews } from "../engagement/engagement.service";
 /**
  * Create News
  */
-export const createNews = async (
-  data: any,
-  file?: Express.Multer.File
-) => {
+export const createNews = async (data: any, file?: Express.Multer.File) => {
+
+  if (typeof data.structured === "string") {
+    data.structured = JSON.parse(data.structured);
+  }
+
+  if (typeof data.tags === "string") {
+    data.tags = JSON.parse(data.tags);
+  }
+
+  if (typeof data.keywords === "string") {
+    data.keywords = JSON.parse(data.keywords);
+  }
+
+  if (data.publishedAt) {
+    data.publishedAt = new Date(data.publishedAt);
+  }
+
   if (file) {
     data.imageUrl = {
       url: file.path,

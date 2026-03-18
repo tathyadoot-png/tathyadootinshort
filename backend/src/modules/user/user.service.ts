@@ -1,10 +1,11 @@
+import dotenv from "dotenv";
+dotenv.config();
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "./user.model";
 import cloudinary from "../../config/cloudinary";
 import { Express } from "express";
-import dotenv from "dotenv";
-dotenv.config();
+
 
 /**
  * Public Register (Always USER)
@@ -96,8 +97,8 @@ export const updateUser = async (
 const ACCESS_SECRET = process.env.JWT_ACCESS_SECRET || "access_secret_key";
 const REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || "refresh_secret_key";
 
-console.log("ACCESS_SECRET:", process.env.JWT_ACCESS_SECRET);
-console.log("REFRESH_SECRET:", process.env.JWT_REFRESH_SECRET);
+// console.log("ACCESS_SECRET:", process.env.JWT_ACCESS_SECRET);
+// console.log("REFRESH_SECRET:", process.env.JWT_REFRESH_SECRET);
 
 export const loginUser = async (
   email: string,
@@ -133,6 +134,7 @@ export const loginUser = async (
   user.refreshToken = refreshToken;
   await user.save();
 
+  // console.log("SIGN SECRET:", process.env.JWT_ACCESS_SECRET);
   return {
     accessToken,
     refreshToken,

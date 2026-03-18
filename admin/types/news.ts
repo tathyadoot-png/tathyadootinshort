@@ -1,0 +1,21 @@
+export type NewsForm = {
+  title: string;
+  slug: string;
+  excerpt: string;
+  detailedContent: string;
+  categoryId: string;
+  tags: string;
+  keywords: string;
+  publishedAt: string;
+  location: string;
+  status: string;
+  isBreaking: boolean;
+  metaTitle: string;
+  metaDescription: string;
+  who: string;
+  what: string;
+  when: string;
+  where: string;
+  why: string;
+  how: string;
+};

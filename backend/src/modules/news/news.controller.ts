@@ -6,21 +6,22 @@ import { asyncHandler } from "../../middlewares/asyncHandler";
 /**
  * Create News
  */
-export const createNews = async (
-  req: Request,
-  res: Response
-) => {
+export const createNews = async (req: any, res: Response) => {
   try {
-    const news = await newsService.createNews(
-      req.body,
-      req.file
-    );
+    const data = {
+      ...req.body,
+      authorId: req.user.id,
+    };
+
+    const news = await newsService.createNews(data, req.file);
 
     return res.status(201).json(news);
-  } catch (error) {
+
+  } catch (error: any) {
+    console.error("CREATE NEWS ERROR:", error);
+
     return res.status(500).json({
-      message: "Error creating news",
-      error,
+      message: error.message,
     });
   }
 };

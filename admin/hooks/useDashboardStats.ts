@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { apiRequest } from "@/lib/api";
+import { apiRequest } from "@/lib/api/api";
 
 interface Stats {
   news: number;

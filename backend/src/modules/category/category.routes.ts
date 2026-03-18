@@ -15,6 +15,8 @@ router.post(
 router.get("/", categoryController.getCategories);
 router.get("/active", categoryController.getActiveCategories);
 
+router.get("/:id", categoryController.getCategoryById);
+
 router.put(
   "/:id",
   upload.single("icon"),

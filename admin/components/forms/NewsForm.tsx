@@ -1,32 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Send,
-  Zap,
-  Globe,
-  Hash,
-  MapPin,
-  LayoutDashboard,
-  Eye,
-  ChevronRight,
-  Image as ImageIcon,
-} from "lucide-react";
-
-type NewsStatus = "draft" | "published" | "archived";
-
-interface StructuredType {
-  who: string;
-  what: string;
-  when: string;
-  where: string;
-  why: string;
-  how: string;
-}
+import { Save, Image as ImageIcon, Globe, FileText, Settings, AlertCircle } from "lucide-react";
 
 export default function CreateNewsPage() {
   const router = useRouter();
+  const [categories, setCategories] = useState<any[]>([]);
+  const [image, setImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState({
@@ -35,301 +17,259 @@ export default function CreateNewsPage() {
     excerpt: "",
     detailedContent: "",
     categoryId: "",
-    location: "",
-    status: "draft" as NewsStatus,
-    isBreaking: false,
     tags: "",
-    structured: {
-      who: "",
-      what: "",
-      when: "",
-      where: "",
-      why: "",
-      how: "",
-    } as StructuredType,
+    keywords: "",
+    publishedAt: "",
+    location: "",
+    status: "draft",
+    isBreaking: false,
     metaTitle: "",
     metaDescription: "",
-    keywords: "",
+    who: "",
+    what: "",
+    when: "",
+    where: "",
+    why: "",
+    how: "",
   });
 
-  const categories = [
-    { _id: "1", name: "Politics" },
-    { _id: "2", name: "Sports" },
-    { _id: "3", name: "Technology" },
-  ];
+  useEffect(() => {
+    fetch("http://localhost:5000/api/categories")
+      .then((res) => res.json())
+      .then((data) => setCategories(data))
+      .catch(console.error);
+  }, []);
 
-  const generateSlug = (title: string) =>
-    title
-      .toLowerCase()
-      .replace(/[^\w ]+/g, "")
-      .replace(/\s+/g, "-");
+  const handleChange = (e: any) => {
+    const { name, value, type, checked } = e.target;
+    setForm({
+      ...form,
+      [name]: type === "checkbox" ? checked : value,
+    });
+  };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      const payload = {
-        ...form,
-        tags: form.tags.split(",").map((t) => t.trim()).filter(Boolean),
-        keywords: form.keywords
-          .split(",")
-          .map((k) => k.trim())
-          .filter(Boolean),
-      };
-
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/news`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        }
-      );
-
-      if (!res.ok) throw new Error("Failed");
-
-      router.push("/admin/news");
-    } catch (err) {
-      console.error(err);
-      alert("Error creating news");
-    } finally {
-      setLoading(false);
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    setImage(file);
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => setImagePreview(reader.result as string);
+      reader.readAsDataURL(file);
     }
   };
 
-  return (
-    <div
-      className="min-h-screen pb-20"
-      style={{ backgroundColor: "var(--color-bg)", color: "var(--color-text)" }}
-    >
-      {/* HEADER */}
-      <div
-        className="sticky top-0 z-50 border-b mb-10"
-        style={{
-          backgroundColor: "var(--color-card)",
-          borderColor: "var(--color-border)",
-        }}
-      >
-        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-2 text-sm">
-            <LayoutDashboard size={16} />
-            <ChevronRight size={14} />
-            <span style={{ color: "var(--color-primary)" }}>
-              News Editor
-            </span>
-          </div>
+const handleSubmit = async (e: any) => {
+  e.preventDefault();
 
+  if (!form.slug) return alert("Slug required");
+  if (!form.categoryId) return alert("Category required");
+
+  setLoading(true);
+
+  try {
+    const token = localStorage.getItem("accessToken");
+    const formData = new FormData();
+
+    Object.entries(form).forEach(([key, value]) => {
+      formData.append(key, String(value));
+    });
+
+    formData.set(
+      "tags",
+      JSON.stringify(form.tags.split(",").map((t) => t.trim()))
+    );
+
+    formData.set(
+      "keywords",
+      JSON.stringify(form.keywords.split(",").map((k) => k.trim()))
+    );
+
+    formData.set(
+      "structured",
+      JSON.stringify({
+        who: form.who,
+        what: form.what,
+        when: form.when,
+        where: form.where,
+        why: form.why,
+        how: form.how,
+      })
+    );
+
+    if (image) formData.append("image", image);
+
+    const res = await fetch("http://localhost:5000/api/news", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    const data = await res.json();
+    // console.log(data);
+
+    if (!res.ok) {
+      alert(data.message);
+      return;
+    }
+
+    router.push("/dashboard/news");
+
+  } catch (err) {
+    console.error(err);
+  } finally {
+    setLoading(false);
+  }
+};
+
+  const inputClasses = "w-full bg-bg border border-border rounded-lg p-3 outline-none focus:ring-2 focus:ring-primary/50 transition-all text-text placeholder:opacity-50";
+  const labelClasses = "block text-sm font-medium mb-1.5 text-text/80";
+
+  return (
+    <div className="p-8 bg-bg min-h-screen">
+      <div className="max-w-6xl mx-auto">
+        <header className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-text tracking-tight">Create Article</h1>
+            <p className="text-text/60 text-sm">Draft and publish your latest news story</p>
+          </div>
           <button
             onClick={handleSubmit}
-            className="px-6 py-2 rounded-full font-bold flex items-center gap-2 text-white transition-all"
-            style={{ backgroundColor: "var(--color-primary)" }}
+            disabled={loading}
+            className="flex items-center gap-2 bg-primary hover:opacity-90 text-white px-6 py-2.5 rounded-lg font-semibold shadow-lg shadow-primary/20 transition-all active:scale-95 disabled:opacity-50"
           >
-            {loading ? "Publishing..." : <><Send size={16} /> Publish</>}
+            {loading ? <span className="animate-pulse">Publishing...</span> : <><Save size={18} /> Publish News</>}
           </button>
-        </div>
-      </div>
+        </header>
 
-      <main className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-10">
-        {/* LEFT SIDE */}
-        <div className="lg:col-span-8 space-y-8">
-          
-          {/* MAIN CONTENT */}
-          <section
-            className="p-8 rounded-3xl shadow"
-            style={{
-              backgroundColor: "var(--color-card)",
-              border: "1px solid var(--color-border)",
-            }}
-          >
-            <input
-              type="text"
-              placeholder="Headline..."
-              className="w-full text-4xl font-black outline-none mb-6 bg-transparent"
-              value={form.title}
-              onChange={(e) => {
-                setForm({
-                  ...form,
-                  title: e.target.value,
-                  slug: generateSlug(e.target.value),
-                });
-              }}
-            />
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Main Content */}
+          <div className="lg:col-span-2 space-y-6">
+            <section className="bg-card p-6 rounded-2xl border border-border shadow-sm">
+              <div className="flex items-center gap-2 mb-4 text-primary font-bold">
+                <FileText size={20} />
+                <h2>Content Details</h2>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className={labelClasses}>Article Title</label>
+                  <input name="title" placeholder="e.g. Breaking: New Tech Innovation..." onChange={handleChange} className={`${inputClasses} text-lg font-semibold`} required />
+                </div>
+                <div>
+                  <label className={labelClasses}>Slug</label>
+                  <input
+                    name="slug"
+                    placeholder="e.g. breaking-news-india"
+                    onChange={handleChange}
+                    className={inputClasses}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className={labelClasses}>Detailed Content</label>
+                  <textarea name="detailedContent" placeholder="Write your story here..." onChange={handleChange} className={`${inputClasses} h-64 resize-none`} required />
+                </div>
+                <div>
+                  <label className={labelClasses}>Short Excerpt</label>
+                  <textarea name="excerpt" placeholder="Brief summary for list views..." onChange={handleChange} className={`${inputClasses} h-20`} />
+                </div>
+              </div>
+            </section>
 
-            <div className="flex gap-4 mb-8">
-              <input
-                type="text"
-                value={form.slug}
-                className="flex-1 p-3 border rounded-xl text-sm"
-                style={{ borderColor: "var(--color-border)" }}
-                readOnly
-              />
-
-              <select
-                className="p-3 border rounded-xl text-sm"
-                style={{ borderColor: "var(--color-border)" }}
-                onChange={(e) =>
-                  setForm({ ...form, categoryId: e.target.value })
-                }
-              >
-                <option value="">Select Category</option>
-                {categories.map((c) => (
-                  <option key={c._id} value={c._id}>
-                    {c.name}
-                  </option>
+            <section className="bg-card p-6 rounded-2xl border border-border shadow-sm">
+              <div className="flex items-center gap-2 mb-4 text-primary font-bold">
+                <AlertCircle size={20} />
+                <h2>The 5 W's (Structured Data)</h2>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                {["who", "what", "when", "where", "why", "how"].map((field) => (
+                  <div key={field}>
+                    <label className="text-xs uppercase font-bold text-text/50 mb-1 block">{field}</label>
+                    <input name={field} onChange={handleChange} className={inputClasses} placeholder={`The ${field}...`} />
+                  </div>
                 ))}
-              </select>
-            </div>
-
-            <textarea
-              rows={10}
-              placeholder="Detailed Content..."
-              className="w-full p-4 border rounded-xl outline-none"
-              style={{ borderColor: "var(--color-border)" }}
-              onChange={(e) =>
-                setForm({ ...form, detailedContent: e.target.value })
-              }
-            />
-          </section>
-
-          {/* 5W1H */}
-          <section
-            className="p-8 rounded-3xl"
-            style={{
-              backgroundColor: "var(--color-card)",
-              border: "1px solid var(--color-border)",
-            }}
-          >
-            <h2
-              className="font-bold mb-6 flex items-center gap-2"
-              style={{ color: "var(--color-primary)" }}
-            >
-              <Zap size={18} /> 5W1H Structure
-            </h2>
-
-            <div className="grid grid-cols-2 gap-4">
-              {Object.keys(form.structured).map((key) => (
-                <input
-                  key={key}
-                  placeholder={key.toUpperCase()}
-                  className="p-3 border rounded-xl text-sm"
-                  style={{ borderColor: "var(--color-border)" }}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      structured: {
-                        ...form.structured,
-                        [key]: e.target.value,
-                      },
-                    })
-                  }
-                />
-              ))}
-            </div>
-          </section>
-        </div>
-
-        {/* RIGHT SIDE */}
-        <div className="lg:col-span-4 space-y-6">
-          
-          {/* Publication */}
-          <div
-            className="p-6 rounded-3xl space-y-4"
-            style={{
-              backgroundColor: "var(--color-card)",
-              border: "1px solid var(--color-border)",
-            }}
-          >
-            <h3 className="font-bold text-sm uppercase">Publication</h3>
-
-            <div className="flex justify-between items-center">
-              <span>Breaking News</span>
-              <button
-                onClick={() =>
-                  setForm({ ...form, isBreaking: !form.isBreaking })
-                }
-                className={`w-12 h-6 rounded-full flex items-center px-1 transition`}
-                style={{
-                  backgroundColor: form.isBreaking
-                    ? "var(--color-primary)"
-                    : "var(--color-border)",
-                }}
-              >
-                <div className="w-4 h-4 bg-white rounded-full ml-auto" />
-              </button>
-            </div>
-
-            <input
-              placeholder="Location"
-              className="w-full p-3 border rounded-xl text-sm"
-              style={{ borderColor: "var(--color-border)" }}
-              onChange={(e) =>
-                setForm({ ...form, location: e.target.value })
-              }
-            />
-
-            <input
-              placeholder="Tags (comma separated)"
-              className="w-full p-3 border rounded-xl text-sm"
-              style={{ borderColor: "var(--color-border)" }}
-              onChange={(e) =>
-                setForm({ ...form, tags: e.target.value })
-              }
-            />
-
-            <select
-              className="w-full p-3 border rounded-xl text-sm"
-              style={{ borderColor: "var(--color-border)" }}
-              onChange={(e) =>
-                setForm({ ...form, status: e.target.value as NewsStatus })
-              }
-            >
-              <option value="draft">Draft</option>
-              <option value="published">Published</option>
-              <option value="archived">Archived</option>
-            </select>
+              </div>
+            </section>
           </div>
 
-          {/* SEO */}
-          <div
-            className="p-6 rounded-3xl space-y-4"
-            style={{
-              backgroundColor: "var(--color-card)",
-              border: "1px solid var(--color-border)",
-            }}
-          >
-            <h3 className="font-bold text-sm uppercase">SEO</h3>
+          {/* Sidebar */}
+          <div className="space-y-6">
+            <section className="bg-card p-6 rounded-2xl border border-border shadow-sm">
+              <div className="flex items-center gap-2 mb-4 text-primary font-bold">
+                <ImageIcon size={20} />
+                <h2>Featured Image</h2>
+              </div>
+              <div className={`relative border-2 border-dashed border-border rounded-xl p-4 transition-colors hover:border-primary/50 ${imagePreview ? 'pb-2' : 'py-10'}`}>
+                {imagePreview ? (
+                  <div className="space-y-3">
+                    <img src={imagePreview} alt="Preview" className="w-full h-40 object-cover rounded-lg" />
+                    <label className="block text-center text-xs text-primary cursor-pointer hover:underline font-medium">
+                      Change Image
+                      <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+                    </label>
+                  </div>
+                ) : (
+                  <label className="flex flex-col items-center justify-center cursor-pointer">
+                    <ImageIcon size={32} className="text-text/20 mb-2" />
+                    <span className="text-xs text-text/40">Upload JPG, PNG, WEBP</span>
+                    <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+                  </label>
+                )}
+              </div>
+            </section>
 
-            <input
-              placeholder="Meta Title"
-              className="w-full p-3 border rounded-xl text-sm"
-              style={{ borderColor: "var(--color-border)" }}
-              onChange={(e) =>
-                setForm({ ...form, metaTitle: e.target.value })
-              }
-            />
+            <section className="bg-card p-6 rounded-2xl border border-border shadow-sm">
+              <div className="flex items-center gap-2 mb-4 text-primary font-bold">
+                <Settings size={20} />
+                <h2>Organization</h2>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className={labelClasses}>Category</label>
+                  <select name="categoryId" onChange={handleChange} className={inputClasses} required>
+                    <option value="">Select category</option>
+                    {categories.map((cat) => <option key={cat._id} value={cat._id}>{cat.name}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className={labelClasses}>Status</label>
+                  <select name="status" onChange={handleChange} className={inputClasses}>
+                    <option value="draft">Draft</option>
+                    <option value="published">Published</option>
+                  </select>
+                </div>
 
-            <textarea
-              rows={3}
-              placeholder="Meta Description"
-              className="w-full p-3 border rounded-xl text-sm"
-              style={{ borderColor: "var(--color-border)" }}
-              onChange={(e) =>
-                setForm({ ...form, metaDescription: e.target.value })
-              }
-            />
+                <div>
+                  <label className={labelClasses}>Publish Date</label>
+                  <input
+                    type="datetime-local"
+                    name="publishedAt"
+                    onChange={handleChange}
+                    className={inputClasses}
+                  />
+                </div>
+                <div className="flex items-center justify-between p-3 bg-bg rounded-lg border border-border">
+                  <span className="text-sm font-medium">Breaking News</span>
+                  <input type="checkbox" name="isBreaking" onChange={handleChange} className="w-5 h-5 accent-primary" />
+                </div>
+              </div>
+            </section>
 
-            <input
-              placeholder="Keywords (comma separated)"
-              className="w-full p-3 border rounded-xl text-sm"
-              style={{ borderColor: "var(--color-border)" }}
-              onChange={(e) =>
-                setForm({ ...form, keywords: e.target.value })
-              }
-            />
+            <section className="bg-card p-6 rounded-2xl border border-border shadow-sm">
+              <div className="flex items-center gap-2 mb-4 text-primary font-bold">
+                <Globe size={20} />
+                <h2>SEO & Meta</h2>
+              </div>
+              <div className="space-y-3">
+                <input name="metaTitle" placeholder="SEO Title" onChange={handleChange} className={inputClasses} />
+                <textarea name="metaDescription" placeholder="Meta Description" onChange={handleChange} className={`${inputClasses} h-24`} />
+                <input name="tags" placeholder="Tags (comma separated)" onChange={handleChange} className={inputClasses} />
+              </div>
+            </section>
           </div>
-        </div>
-      </main>
+        </form>
+      </div>
     </div>
   );
 }
