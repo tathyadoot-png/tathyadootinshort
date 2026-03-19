@@ -2,6 +2,8 @@
 
 import StatCard from "@/components/ui/StatCard";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
+import EngagementChart from "@/components/ui/EngagementChart";
+import TrendingNews from "@/components/ui/TrendingNews";
 
 export default function DashboardPage() {
   const { stats, loading } = useDashboardStats();
@@ -42,7 +44,39 @@ export default function DashboardPage() {
           value={stats.users}
           color="text-red-600"
         />
+
+        {/* <StatCard
+  title="Total Views"
+  value={stats.views}
+  color="text-indigo-600"
+/>
+
+<StatCard
+  title="Total Likes"
+  value={stats.likes}
+  color="text-pink-600"
+/>
+
+<StatCard
+  title="Bookmarks"
+  value={stats.bookmarks}
+  color="text-yellow-600"
+/>
+
+<StatCard
+  title="Shares"
+  value={stats.shares}
+  color="text-orange-600"
+/> */}
+
+
+
       </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <EngagementChart stats={stats} />
+  <TrendingNews />
+</div>
     </div>
   );
 }
