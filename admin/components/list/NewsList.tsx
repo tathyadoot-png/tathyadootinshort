@@ -8,6 +8,8 @@ import DataTable from "@/components/table/DataTable";
 import Pagination from "@/components/ui/Pagination";
 import { useDebounce } from "@/hooks/useDebounce";
 import ListHeader from "@/components/common/ListHeader";
+import StatusToggle from "@/components/ui/StatusToggle";
+import { toggleNewsStatus } from "@/lib/api/news";
 
 interface News {
   _id: string;
@@ -52,7 +54,7 @@ export default function NewsList() {
       setLoading(true);
 
       const res = await apiRequest(
-        `/news?page=${page}&search=${debouncedSearch}&category=${category}&status=${status}&sort=${sortKey}&order=${sortOrder}`
+        `/news/admin?page=${page}&search=${debouncedSearch}&category=${category}&status=${status}&sort=${sortKey}&order=${sortOrder}`
       );
 
       setNews(res.data || []);
@@ -95,25 +97,53 @@ export default function NewsList() {
 
   // 📊 Columns
   const columns = [
-    {
-      key: "title",
-      label: "Title",
-      sortable: true,
-    },
-    {
-      key: "category",
-      label: "Category",
-      render: (item: any) =>
-         item.categoryId?.name || "No Category",
-    },
-    {
-      key: "createdAt",
-      label: "Date",
-      sortable: true,
-      render: (item: any) =>
-        new Date(item.createdAt).toLocaleDateString(),
-    },
-  ];
+  {
+    key: "title",
+    label: "Title",
+    sortable: true,
+  },
+  {
+    key: "category",
+    label: "Category",
+    render: (item: any) =>
+      item.categoryId?.name || "No Category",
+  },
+  {
+    key: "createdAt",
+    label: "Date",
+    sortable: true,
+    render: (item: any) =>
+      new Date(item.createdAt).toLocaleDateString(),
+  },
+
+  // 🔥 ADD THIS (STATUS TOGGLE)
+  {
+    key: "status",
+    label: "Status",
+    render: (item: any) => (
+      <StatusToggle
+        value={item.status === "published"}
+        activeLabel="Published"
+        inactiveLabel="Draft"
+        onChange={async (val: boolean) => {
+          const newStatus = val ? "published" : "draft";
+
+          // 🔥 API call
+          await toggleNewsStatus(item._id, newStatus);
+
+          // 🔥 UI update (no reload)
+          setNews((prev) =>
+            prev.map((n) =>
+              n._id === item._id
+                ? { ...n, status: newStatus }
+                : n
+            )
+          );
+        }}
+      />
+    ),
+  },
+];
 
   // ⚡ Actions
   const renderActions = (item: any) => (

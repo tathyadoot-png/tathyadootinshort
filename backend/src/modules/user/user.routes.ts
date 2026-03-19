@@ -89,4 +89,6 @@ router.delete(
   userController.deleteUser
 );
 
+router.patch("/:id/status", userController.toggleUserStatus);
+
 export default router;

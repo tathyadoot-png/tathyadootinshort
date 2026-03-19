@@ -36,6 +36,49 @@ export const createNews = async (data: any, file?: Express.Multer.File) => {
   return await News.create(data);
 };
 
+
+export const getAllNews = async (
+  page: number,
+  limit: number,
+  status?: string,
+  search?: string
+) => {
+  const skip = (page - 1) * limit;
+
+  const query: any = {
+    isDeleted: false,
+  };
+
+  // ✅ status filter (optional)
+  if (status) {
+    query.status = status;
+  }
+
+  // ✅ search by title
+  if (search) {
+    query.title = { $regex: search, $options: "i" };
+  }
+
+  const [data, total] = await Promise.all([
+    News.find(query)
+      .populate("categoryId", "name slug")
+      .populate("authorId", "name")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit),
+
+    News.countDocuments(query),
+  ]);
+
+  return {
+    total,
+    page,
+    totalPages: Math.ceil(total / limit),
+    data,
+  };
+};
+
+
 /**
  * Get All Published News (Pagination)
  */
@@ -264,4 +307,21 @@ export const getNewsCount = async () => {
   return await News.countDocuments({
     isDeleted: false,
   });
+};
+
+
+/**
+ * Toggle News Status (Publish / Draft)
+ */
+export const toggleNewsStatus = async (
+  id: string,
+  status: "published" | "draft"
+) => {
+  const news = await News.findByIdAndUpdate(
+    id,
+    { status },
+    { new: true }
+  );
+
+  return news;
 };

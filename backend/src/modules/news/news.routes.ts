@@ -14,6 +14,7 @@ router.post(
   newsController.createNews
 );
 
+router.get("/admin", authMiddleware, newsController.getAllNews);
 router.get("/", newsController.getPublishedNews);
 
 router.get("/id/:id", newsController.getNewsById);
@@ -49,6 +50,7 @@ router.get(
   newsController.getNewsCount
 );
 
+router.patch("/:id/status", newsController.toggleNewsStatus);
 
 
 

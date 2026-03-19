@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { User } from "@/types/user";
 import { getUsers, deleteUser } from "@/lib/api/user";
 import { useRouter } from "next/navigation";
-
+import StatusToggle from "@/components/ui/StatusToggle";
+import { toggleUserStatus } from "@/lib/api/user";
 import DataTable from "@/components/table/DataTable";
 import Pagination from "@/components/ui/Pagination";
 import ListHeader from "@/components/common/ListHeader";
@@ -108,6 +109,30 @@ export default function UserList() {
       render: (item: any) =>
         item.isActive ? "Active" : "Inactive",
     },
+    {
+      key: "statusToggle",
+      label: "Status Toggle",
+      render: (item: any) => (
+        <StatusToggle
+          value={item.isActive}
+          activeLabel="Active"
+          inactiveLabel="Inactive"
+          onChange={async (val: boolean) => {
+            // 🔥 API call
+            await toggleUserStatus(item._id, val);
+
+            // 🔥 UI update (no reload)
+            setUsers((prev) =>
+              prev.map((u) =>
+                u._id === item._id
+                  ? { ...u, isActive: val }
+                  : u
+              )
+            );
+          }}
+        />
+      ),
+    }
   ];
 
   // ⚡ Actions
@@ -133,7 +158,7 @@ export default function UserList() {
 
   return (
     <div className="bg-white dark:bg-card rounded-xl shadow p-6">
-      
+
       {/* 🔥 Header + Filters */}
       <ListHeader
         search={search}

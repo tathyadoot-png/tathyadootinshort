@@ -239,3 +239,68 @@ export const getNewsCount = asyncHandler(
     res.json({ total: count });
   }
 );
+
+
+
+/**
+ * Toggle News Status
+ */
+export const toggleNewsStatus = async (
+  req: Request<{ id: string }>,
+  res: Response
+) => {
+  try {
+    const { status } = req.body;
+
+    const news = await newsService.toggleNewsStatus(
+      req.params.id,
+      status
+    );
+
+    if (!news) {
+      return res.status(404).json({
+        message: "News not found",
+      });
+    }
+
+    return res.json(news);
+  } catch (error) {
+    return res.status(500).json({
+      message: "Error updating status",
+      error,
+    });
+  }
+};
+
+
+/**
+ * 🔥 Get All News (Admin List)
+ */
+export const getAllNews = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const {
+      page = "1",
+      limit = "10",
+      status,
+      search,
+    } = req.query;
+
+    const result = await newsService.getAllNews(
+      Number(page),
+      Number(limit),
+      status as string,
+      search as string
+    );
+
+    return res.json(result);
+  } catch (error) {
+    console.error("GET ALL NEWS ERROR:", error);
+
+    return res.status(500).json({
+      message: "Error fetching news",
+    });
+  }
+};

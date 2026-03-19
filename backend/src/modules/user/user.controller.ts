@@ -210,3 +210,22 @@ export const deleteUser = async (
 
   res.json({ message: "User deleted" });
 };
+
+export const toggleUserStatus = async (req: any, res: Response) => {
+  try {
+    const { isActive } = req.body;
+
+    const user = await userService.toggleUserStatus(
+      req.params.id,
+      isActive
+    );
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: "Error updating user" });
+  }
+};

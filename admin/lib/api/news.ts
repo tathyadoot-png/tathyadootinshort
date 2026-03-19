@@ -29,3 +29,27 @@ export const deleteNews = (id: string) =>
   apiRequest(`/news/${id}`, {
     method: "DELETE",
   });
+
+export const toggleNewsStatus = (
+  id: string,
+  status: "published" | "draft"
+) =>
+  apiRequest(`/news/${id}/status`, {
+    method: "PATCH",
+    body: JSON.stringify({ status }),
+  });
+
+  export const getAdminNews = ({
+  page = 1,
+  search = "",
+  status = "",
+}) => {
+  const params = new URLSearchParams();
+
+  params.append("page", String(page));
+
+  if (search) params.append("search", search);
+  if (status) params.append("status", status);
+
+  return apiRequest(`/news/admin?${params.toString()}`);
+};

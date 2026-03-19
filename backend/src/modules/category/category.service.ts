@@ -127,3 +127,15 @@ export const getCategoryById = async (id: string) => {
 export const getCategoryCount = async () => {
   return await Category.countDocuments();
 };
+
+
+export const toggleCategoryStatus = async (
+  id: string,
+  isActive: boolean
+) => {
+  return await Category.findByIdAndUpdate(
+    id,
+    { isActive },
+    { new: true }
+  );
+};

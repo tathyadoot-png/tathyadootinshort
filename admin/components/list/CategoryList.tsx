@@ -149,7 +149,8 @@ import { useEffect, useState } from "react";
 import { Category } from "@/types/category";
 import { getCategories, deleteCategory } from "@/lib/api/category";
 import { useRouter } from "next/navigation";
-
+import StatusToggle from "@/components/ui/StatusToggle";
+import { toggleCategoryStatus } from "@/lib/api/category";
 import DataTable from "@/components/table/DataTable";
 import Pagination from "@/components/ui/Pagination";
 import ListHeader from "@/components/common/ListHeader";
@@ -226,28 +227,46 @@ export default function CategoryList() {
   };
 
   // 📊 Columns
-  const columns = [
-    {
-      key: "name",
-      label: "Name",
-      sortable: true,
-    },
-    {
-      key: "slug",
-      label: "Slug",
-    },
-    {
-      key: "status",
-      label: "Status",
-      render: (item: any) =>
-        item.isActive ? "Active" : "Inactive",
-    },
-    {
-      key: "order",
-      label: "Order",
-      sortable: true,
-    },
-  ];
+const columns = [
+  {
+    key: "name",
+    label: "Name",
+    sortable: true,
+  },
+  {
+    key: "slug",
+    label: "Slug",
+  },
+  {
+    key: "status",
+    label: "Status",
+    render: (item: any) => (
+      <StatusToggle
+        value={item.isActive}
+        activeLabel="Active"
+        inactiveLabel="Inactive"
+        onChange={async (val: boolean) => {
+          // 🔥 API call
+          await toggleCategoryStatus(item._id, val);
+
+          // 🔥 UI update (no reload)
+          setCategories((prev) =>
+            prev.map((c) =>
+              c._id === item._id
+                ? { ...c, isActive: val }
+                : c
+            )
+          );
+        }}
+      />
+    ),
+  },
+  {
+    key: "order",
+    label: "Order",
+    sortable: true,
+  },
+];
 
   // ⚡ Actions
   const renderActions = (item: any) => (

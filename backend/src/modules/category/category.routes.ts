@@ -31,5 +31,8 @@ router.get(
   categoryController.getCategoryCount
 );
 
+// routes/category.routes.ts
+
+router.patch("/:id/status", categoryController.toggleCategoryStatus);
 
 export default router;

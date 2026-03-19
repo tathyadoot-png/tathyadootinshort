@@ -51,3 +51,9 @@ export const deleteUser = (id: string) =>
   apiRequest(`/users/${id}`, {
     method: "DELETE",
   });
+
+  export const toggleUserStatus = (id: string, isActive: boolean) =>
+  apiRequest(`/users/${id}/status`, {
+    method: "PATCH",
+    body: JSON.stringify({ isActive }),
+  });

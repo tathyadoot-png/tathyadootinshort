@@ -275,4 +275,15 @@ export const getUserCount = async () => {
 };
 
 
+export const toggleUserStatus = async (
+  id: string,
+  isActive: boolean
+) => {
+  return await User.findByIdAndUpdate(
+    id,
+    { isActive },
+    { new: true }
+  );
+};
+
 

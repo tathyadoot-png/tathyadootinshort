@@ -53,3 +53,12 @@ export const deleteCategory = (id: string) =>
   apiRequest(`/categories/${id}`, {
     method: "DELETE",
   });
+
+  export const toggleCategoryStatus = (
+  id: string,
+  isActive: boolean
+) =>
+  apiRequest(`/categories/${id}/status`, {
+    method: "PATCH",
+    body: JSON.stringify({ isActive }),
+  });
