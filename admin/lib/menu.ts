@@ -13,17 +13,17 @@ export const sidebarMenu = [
   },
   {
     label: "News",
-    href: "/dashboard/news/create",
+    href: "/dashboard/news", 
     icon: Newspaper,
   },
   {
     label: "Categories",
-    href: "/dashboard/category/create",
+    href: "/dashboard/category",
     icon: Tag,
   },
   {
     label: "Users",
-    href: "/dashboard/users/create",
+    href: "/dashboard/users",
     icon: Users,
   },
 ];

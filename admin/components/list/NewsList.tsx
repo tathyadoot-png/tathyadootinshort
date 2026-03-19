@@ -49,16 +49,21 @@ export default function NewsList() {
 
   return (
     <div className="bg-white dark:bg-card rounded-xl shadow p-6">
-      <div className="flex justify-between mb-6">
-        <h2 className="text-xl font-bold">All News</h2>
+   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+  <div>
+    <h2 className="text-xl font-bold text-text">All News</h2>
+    <p className="text-sm text-text/60">
+      Manage and organize your news articles
+    </p>
+  </div>
 
-        <Link
-          href="/dashboard/news/create"
-          className="bg-primary text-white px-4 py-2 rounded-lg"
-        >
-          + Create News
-        </Link>
-      </div>
+  <Link
+    href="/dashboard/news/create"
+    className="inline-flex items-center gap-2 bg-red-500 hover:opacity-90 text-white px-5 py-2.5 rounded-lg font-semibold shadow-md shadow-primary/20 transition-all active:scale-95"
+  >
+    + Create News
+  </Link>
+</div>
 
       <div className="space-y-4">
        {Array.isArray(news) &&

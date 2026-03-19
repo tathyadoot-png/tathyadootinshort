@@ -220,7 +220,7 @@ export default function UserForm({
       </div>
 
       {/* SUBMIT */}
-      <button className="bg-[var(--color-accent)] text-white px-5 py-2 rounded-lg">
+      <button className="bg-red-500 text-white px-5 py-2 rounded-lg">
         {initialData ? "Update User" : "Create User"}
       </button>
     </form>

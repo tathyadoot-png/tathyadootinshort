@@ -48,7 +48,7 @@ export default function UserList() {
           onClick={() =>
             router.push("/dashboard/users/create")
           }
-          className="bg-[var(--color-accent)] text-white px-5 py-2.5 rounded-lg font-semibold"
+          className="bg-red-500 text-white px-5 py-2.5 rounded-lg font-semibold"
         >
           + Create Editor
         </button>

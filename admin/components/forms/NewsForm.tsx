@@ -167,13 +167,13 @@ useEffect(() => {
       <div className="max-w-6xl mx-auto">
         <header className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-text tracking-tight">Create Article</h1>
+            <h1 className="text-3xl font-bold  text-text tracking-tight">Create Article</h1>
             <p className="text-text/60 text-sm">Draft and publish your latest news story</p>
           </div>
           <button
             onClick={handleSubmit}
             disabled={loading}
-            className="flex items-center gap-2 bg-primary hover:opacity-90 text-white px-6 py-2.5 rounded-lg font-semibold shadow-lg shadow-primary/20 transition-all active:scale-95 disabled:opacity-50"
+            className="flex items-center gap-2 bg-red-500 hover:opacity-90 text-white px-6 py-2.5 rounded-lg font-semibold shadow-lg shadow-primary/20 transition-all active:scale-95 disabled:opacity-50"
           >
             {loading ? <span className="animate-pulse">Publishing...</span> : <><Save size={18} /> Publish News</>}
           </button>

@@ -96,7 +96,7 @@ const handleChange = (
       onSubmit={handleSubmit}
       className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl p-6 space-y-5 shadow-md"
     >
-      <h2 className="text-2xl font-bold text-[var(--color-accent)]">
+      <h2 className="text-2xl  font-bold text-[var(--color-accent)]">
         {initialData ? "Edit Category" : "Create Category"}
       </h2>
 
