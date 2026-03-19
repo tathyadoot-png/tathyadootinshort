@@ -21,6 +21,30 @@ export const login = async (req: Request, res: Response) => {
   }
 };
 
+export const getUserById = async (
+  req: Request<{ id: string }>,
+  res: Response
+) => {
+  try {
+    const user = await userService.getUserById(
+      req.params.id
+    );
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ message: "User not found" });
+    }
+
+    return res.json(user);
+  } catch (error) {
+    return res.status(500).json({
+      message: "Error fetching user",
+      error,
+    });
+  }
+};
+
 export const getProfile = async (req: any, res: Response) => {
   const user = await userService.getProfile(req.user.id);
   return res.json(user);
@@ -28,6 +52,11 @@ export const getProfile = async (req: any, res: Response) => {
 
 export const createEditor = async (req: Request, res: Response) => {
   try {
+    // 🔥 FIX HERE
+    if (req.body.permissions) {
+      req.body.permissions = JSON.parse(req.body.permissions);
+    }
+
     const user = await userService.createEditor(
       req.body,
       req.file
@@ -47,6 +76,10 @@ export const updateUser = async (
   res: Response
 ) => {
   try {
+    if (req.body.permissions) {
+      req.body.permissions = JSON.parse(req.body.permissions);
+    }
+
     const user = await userService.updateUser(
       req.params.id,
       req.body,
@@ -138,3 +171,21 @@ export const getUserCount = asyncHandler(
     res.json({ total: count });
   }
 );
+
+
+export const deleteUser = async (
+  req: Request<{ id: string }>,
+  res: Response
+) => {
+  const user = await userService.deleteUser(
+    req.params.id
+  );
+
+  if (!user) {
+    return res.status(404).json({
+      message: "User not found",
+    });
+  }
+
+  res.json({ message: "User deleted" });
+};

@@ -7,6 +7,7 @@ import cloudinary from "../../config/cloudinary";
 import { Express } from "express";
 
 
+
 /**
  * Public Register (Always USER)
  */
@@ -24,6 +25,11 @@ export const registerUser = async (data: any) => {
   });
 
   return user;
+};
+
+
+export const deleteUser = async (id: string) => {
+  return await User.findByIdAndDelete(id);
 };
 
 /**
@@ -97,8 +103,7 @@ export const updateUser = async (
 const ACCESS_SECRET = process.env.JWT_ACCESS_SECRET || "access_secret_key";
 const REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || "refresh_secret_key";
 
-// console.log("ACCESS_SECRET:", process.env.JWT_ACCESS_SECRET);
-// console.log("REFRESH_SECRET:", process.env.JWT_REFRESH_SECRET);
+
 
 export const loginUser = async (
   email: string,
@@ -121,7 +126,7 @@ export const loginUser = async (
       role: user.role,
       permissions: user.permissions,
     },
-    ACCESS_SECRET,
+    process.env.JWT_ACCESS_SECRET!,
     { expiresIn: "15m" }
   );
 
@@ -134,7 +139,7 @@ export const loginUser = async (
   user.refreshToken = refreshToken;
   await user.save();
 
-  // console.log("SIGN SECRET:", process.env.JWT_ACCESS_SECRET);
+
   return {
     accessToken,
     refreshToken,
@@ -142,43 +147,9 @@ export const loginUser = async (
 };
 
 
-// export const loginUser = async (
-//   email: string,
-//   password: string
-// ) => {
-//   const user = await User.findOne({ email }).select("+password");
-//   if (!user) throw new Error("Invalid credentials");
-
-//   const isMatch = await bcrypt.compare(password, user.password);
-//   if (!isMatch) throw new Error("Invalid credentials");
-
-//   user.lastLogin = new Date();
-//   await user.save();
-
-//   const accessToken = jwt.sign(
-//     {
-//       id: user._id,
-//       role: user.role,
-//       permissions: user.permissions,
-//     },
-//     ACCESS_SECRET,
-//     { expiresIn: "15m" }
-//   );
-
-//   const refreshToken = jwt.sign(
-//     { id: user._id },
-//     REFRESH_SECRET,
-//     { expiresIn: "7d" }
-//   );
-
-//   user.refreshToken = refreshToken;
-//   await user.save();
-
-//   return {
-//     accessToken,
-//     refreshToken,
-//   };
-// };
+export const getUserById = async (id: string) => {
+  return await User.findById(id).select("-password");
+};
 
 export const refreshAccessToken = async (
   token: string

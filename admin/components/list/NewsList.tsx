@@ -16,15 +16,16 @@ export default function NewsList() {
   const [news, setNews] = useState<News[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchNews = async () => {
-    try {
-      const res = await apiRequest("/news");
-      setNews(res);
-    } catch (err: any) {
-      console.error(err.message);
-    }
+ const fetchNews = async () => {
+  try {
+    const res = await apiRequest("/news");
+    setNews(res.data || res.news || res);
+  } catch (err: any) {
+    console.error(err.message);
+  } finally {
     setLoading(false);
-  };
+  }
+};
 
   useEffect(() => {
     fetchNews();
@@ -60,7 +61,8 @@ export default function NewsList() {
       </div>
 
       <div className="space-y-4">
-        {news.map((item) => (
+       {Array.isArray(news) &&
+  news.map((item) => (
           <div
             key={item._id}
             className="border p-4 rounded-lg flex justify-between items-center"

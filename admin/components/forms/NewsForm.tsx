@@ -2,7 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { getNewsById, createNews, updateNews } from "@/lib/api/news";
+import { getCategories } from "@/lib/api/category";
 import { Save, Image as ImageIcon, Globe, FileText, Settings, AlertCircle } from "lucide-react";
+import { Structured } from "@/types/news";
 
 export default function CreateNewsPage() {
   const router = useRouter();
@@ -10,6 +14,8 @@ export default function CreateNewsPage() {
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const searchParams = useSearchParams();
+  const id = searchParams.get("id");
 
   const [form, setForm] = useState({
     title: "",
@@ -33,10 +39,10 @@ export default function CreateNewsPage() {
     how: "",
   });
 
-  useEffect(() => {
-    fetch("http://localhost:5000/api/categories")
-      .then((res) => res.json())
-      .then((data) => setCategories(data))
+
+useEffect(() => {
+    getCategories()
+      .then((res) => setCategories(res.data || res))
       .catch(console.error);
   }, []);
 
@@ -48,6 +54,41 @@ export default function CreateNewsPage() {
     });
   };
 
+ // 🔥 EDIT MODE
+  useEffect(() => {
+    if (id) {
+      getNewsById(id).then((data) => {
+        setForm((prev) => ({
+          ...prev,
+          title: data.title || "",
+          slug: data.slug || "",
+          excerpt: data.excerpt || "",
+          detailedContent: data.detailedContent || "",
+          categoryId: data.category?._id || "",
+          tags: data.tags?.join(",") || "",
+          keywords: data.keywords?.join(",") || "",
+          status: data.status || "draft",
+          isBreaking: data.isBreaking ?? false,
+          metaTitle: data.metaTitle || "",
+          metaDescription: data.metaDescription || "",
+          publishedAt: data.publishedAt
+            ? new Date(data.publishedAt).toISOString().slice(0, 16)
+            : "",
+          location: data.location || "",
+          who: data.structured?.who || "",
+          what: data.structured?.what || "",
+          when: data.structured?.when || "",
+          where: data.structured?.where || "",
+          why: data.structured?.why || "",
+          how: data.structured?.how || "",
+        }));
+
+        setImagePreview(data.image?.url || null);
+      });
+    }
+  }, [id]);
+
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     setImage(file);
@@ -58,71 +99,66 @@ export default function CreateNewsPage() {
     }
   };
 
-const handleSubmit = async (e: any) => {
-  e.preventDefault();
+  const handleSubmit = async (e: any) => {
+    e.preventDefault();
 
-  if (!form.slug) return alert("Slug required");
-  if (!form.categoryId) return alert("Category required");
+    if (!form.slug) return alert("Slug required");
+    if (!form.categoryId) return alert("Category required");
 
-  setLoading(true);
+    setLoading(true);
 
-  try {
-    const token = localStorage.getItem("accessToken");
-    const formData = new FormData();
+    try {
+      const formData = new FormData();
 
-    Object.entries(form).forEach(([key, value]) => {
-      formData.append(key, String(value));
-    });
+      Object.entries(form).forEach(([key, value]) => {
+        if (typeof value === "boolean") {
+          formData.append(key, String(value));
+        } else {
+          formData.append(key, value as string);
+        }
+      });
 
-    formData.set(
-      "tags",
-      JSON.stringify(form.tags.split(",").map((t) => t.trim()))
-    );
+      formData.set(
+        "tags",
+        JSON.stringify(form.tags.split(",").map((t) => t.trim()))
+      );
 
-    formData.set(
-      "keywords",
-      JSON.stringify(form.keywords.split(",").map((k) => k.trim()))
-    );
+      formData.set(
+        "keywords",
+        JSON.stringify(
+          form.keywords.split(",").map((k) => k.trim())
+        )
+      );
 
-    formData.set(
-      "structured",
-      JSON.stringify({
-        who: form.who,
-        what: form.what,
-        when: form.when,
-        where: form.where,
-        why: form.why,
-        how: form.how,
-      })
-    );
+      formData.set(
+        "structured",
+        JSON.stringify({
+          who: form.who,
+          what: form.what,
+          when: form.when,
+          where: form.where,
+          why: form.why,
+          how: form.how,
+        })
+      );
 
-    if (image) formData.append("image", image);
+      if (image) formData.append("image", image);
 
-    const res = await fetch("http://localhost:5000/api/news", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: formData,
-    });
+      // 🔥 CREATE vs UPDATE
+      if (id) {
+        await updateNews(id, formData);
+      } else {
+        await createNews(formData);
+      }
 
-    const data = await res.json();
-    // console.log(data);
-
-    if (!res.ok) {
-      alert(data.message);
-      return;
+      router.push("/dashboard/news");
+    } catch (err) {
+      console.error(err);
+      alert("Something went wrong");
+    } finally {
+      setLoading(false);
     }
-
-    router.push("/dashboard/news");
-
-  } catch (err) {
-    console.error(err);
-  } finally {
-    setLoading(false);
-  }
-};
-
+  };
   const inputClasses = "w-full bg-bg border border-border rounded-lg p-3 outline-none focus:ring-2 focus:ring-primary/50 transition-all text-text placeholder:opacity-50";
   const labelClasses = "block text-sm font-medium mb-1.5 text-text/80";
 
@@ -154,12 +190,13 @@ const handleSubmit = async (e: any) => {
               <div className="space-y-4">
                 <div>
                   <label className={labelClasses}>Article Title</label>
-                  <input name="title" placeholder="e.g. Breaking: New Tech Innovation..." onChange={handleChange} className={`${inputClasses} text-lg font-semibold`} required />
+                  <input name="title"  placeholder="e.g. Breaking: New Tech Innovation..." value={form.title} onChange={handleChange} className={`${inputClasses} text-lg font-semibold`} required />
                 </div>
                 <div>
                   <label className={labelClasses}>Slug</label>
                   <input
                     name="slug"
+                    value={form.slug}
                     placeholder="e.g. breaking-news-india"
                     onChange={handleChange}
                     className={inputClasses}
@@ -168,11 +205,11 @@ const handleSubmit = async (e: any) => {
                 </div>
                 <div>
                   <label className={labelClasses}>Detailed Content</label>
-                  <textarea name="detailedContent" placeholder="Write your story here..." onChange={handleChange} className={`${inputClasses} h-64 resize-none`} required />
+                  <textarea name="detailedContent" placeholder="Write your story here..." value={form.detailedContent} onChange={handleChange} className={`${inputClasses} h-64 resize-none`} required />
                 </div>
                 <div>
                   <label className={labelClasses}>Short Excerpt</label>
-                  <textarea name="excerpt" placeholder="Brief summary for list views..." onChange={handleChange} className={`${inputClasses} h-20`} />
+                  <textarea name="excerpt" placeholder="Brief summary for list views..." value={form.excerpt} onChange={handleChange} className={`${inputClasses} h-20`} />
                 </div>
               </div>
             </section>
@@ -186,7 +223,7 @@ const handleSubmit = async (e: any) => {
                 {["who", "what", "when", "where", "why", "how"].map((field) => (
                   <div key={field}>
                     <label className="text-xs uppercase font-bold text-text/50 mb-1 block">{field}</label>
-                    <input name={field} onChange={handleChange} className={inputClasses} placeholder={`The ${field}...`} />
+                    <input name={field} onChange={handleChange} value={form[field as keyof typeof form] as string}   className={inputClasses} placeholder={`The ${field}...`} />
                   </div>
                 ))}
               </div>
@@ -204,9 +241,9 @@ const handleSubmit = async (e: any) => {
                 {imagePreview ? (
                   <div className="space-y-3">
                     <img src={imagePreview} alt="Preview" className="w-full h-40 object-cover rounded-lg" />
-                    <label className="block text-center text-xs text-primary cursor-pointer hover:underline font-medium">
+                    <label className="block text-center text-xs text-primary  cursor-pointer hover:underline font-medium">
                       Change Image
-                      <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+                      <input type="file"  accept="image/*" onChange={handleImageChange} className="hidden" />
                     </label>
                   </div>
                 ) : (
@@ -227,14 +264,14 @@ const handleSubmit = async (e: any) => {
               <div className="space-y-4">
                 <div>
                   <label className={labelClasses}>Category</label>
-                  <select name="categoryId" onChange={handleChange} className={inputClasses} required>
+                  <select name="categoryId" onChange={handleChange} value={form.categoryId} className={inputClasses} required>
                     <option value="">Select category</option>
                     {categories.map((cat) => <option key={cat._id} value={cat._id}>{cat.name}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className={labelClasses}>Status</label>
-                  <select name="status" onChange={handleChange} className={inputClasses}>
+                  <select name="status" onChange={handleChange} value={form.status} className={inputClasses}>
                     <option value="draft">Draft</option>
                     <option value="published">Published</option>
                   </select>
@@ -244,6 +281,7 @@ const handleSubmit = async (e: any) => {
                   <label className={labelClasses}>Publish Date</label>
                   <input
                     type="datetime-local"
+                    value={form.publishedAt}
                     name="publishedAt"
                     onChange={handleChange}
                     className={inputClasses}
@@ -251,7 +289,7 @@ const handleSubmit = async (e: any) => {
                 </div>
                 <div className="flex items-center justify-between p-3 bg-bg rounded-lg border border-border">
                   <span className="text-sm font-medium">Breaking News</span>
-                  <input type="checkbox" name="isBreaking" onChange={handleChange} className="w-5 h-5 accent-primary" />
+                  <input type="checkbox" name="isBreaking" checked={form.isBreaking} onChange={handleChange} className="w-5 h-5 accent-primary" />
                 </div>
               </div>
             </section>
@@ -262,9 +300,9 @@ const handleSubmit = async (e: any) => {
                 <h2>SEO & Meta</h2>
               </div>
               <div className="space-y-3">
-                <input name="metaTitle" placeholder="SEO Title" onChange={handleChange} className={inputClasses} />
-                <textarea name="metaDescription" placeholder="Meta Description" onChange={handleChange} className={`${inputClasses} h-24`} />
-                <input name="tags" placeholder="Tags (comma separated)" onChange={handleChange} className={inputClasses} />
+                <input name="metaTitle" placeholder="SEO Title" value={form.metaTitle} onChange={handleChange} className={inputClasses} />
+                <textarea name="metaDescription" placeholder="Meta Description" value={form.metaDescription} onChange={handleChange} className={`${inputClasses} h-24`} />
+                <input name="tags" placeholder="Tags (comma separated)" value={form.tags} onChange={handleChange} className={inputClasses} />
               </div>
             </section>
           </div>

@@ -7,6 +7,9 @@ import { upload } from "../../middlewares/upload.middleware";
 
 const router = Router();
 
+
+
+
 // Public
 router.post("/register", userController.register);
 router.post("/login", userController.login);
@@ -22,6 +25,20 @@ router.post(
   upload.single("image"), 
   userController.createEditor
 );
+
+router.get(
+  "/count",
+  authMiddleware,
+  userController.getUserCount
+)
+
+router.get(
+  "/:id",
+  authMiddleware,
+  requirePermission("user.managePermissions"),
+  userController.getUserById
+);
+
 router.get(
   "/",
   authMiddleware,
@@ -65,10 +82,11 @@ router.post(
   userController.logout
 );
 
-router.get(
-  "/count",
+router.delete(
+  "/:id",
   authMiddleware,
-  userController.getUserCount
+  requirePermission("user.managePermissions"),
+  userController.deleteUser
 );
 
 export default router;

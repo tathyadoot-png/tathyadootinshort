@@ -94,11 +94,27 @@ export const updateNews = async (
   const news = await News.findById(id);
   if (!news) return null;
 
+  // 🔥 ADD THIS (MOST IMPORTANT FIX)
+  if (typeof data.structured === "string") {
+    data.structured = JSON.parse(data.structured);
+  }
+
+  if (typeof data.tags === "string") {
+    data.tags = JSON.parse(data.tags);
+  }
+
+  if (typeof data.keywords === "string") {
+    data.keywords = JSON.parse(data.keywords);
+  }
+
+  if (data.publishedAt) {
+    data.publishedAt = new Date(data.publishedAt);
+  }
+
+  // 🔥 image handling
   if (file) {
     if (news.imageUrl?.publicId) {
-      await cloudinary.uploader.destroy(
-        news.imageUrl.publicId
-      );
+      await cloudinary.uploader.destroy(news.imageUrl.publicId);
     }
 
     data.imageUrl = {
