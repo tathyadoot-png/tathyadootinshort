@@ -1,17 +1,10 @@
-"use client";
-
 import { useEffect, useState } from "react";
 import { apiRequest } from "@/lib/api/api";
 
-interface Stats {
-  news: number;
-  categories: number;
-  users: number;
-}
-
-export function useDashboardStats() {
-  const [stats, setStats] = useState<Stats>({
+export const useDashboardStats = () => {
+  const [stats, setStats] = useState({
     news: 0,
+    publishedNews: 0,
     categories: 0,
     users: 0,
   });
@@ -19,29 +12,25 @@ export function useDashboardStats() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchStats() {
+    const fetchStats = async () => {
       try {
-        const [newsRes, categoryRes, userRes] =
-          await Promise.all([
-            apiRequest("/news/count"),
-            apiRequest("/categories/count"),
-            apiRequest("/users/count"),
-          ]);
+        const res = await apiRequest("/dashboard/stats");
 
         setStats({
-          news: newsRes.total,
-          categories: categoryRes.total,
-          users: userRes.total,
+          news: res.totalNews,
+          publishedNews: res.publishedNews,
+          categories: res.totalCategories,
+          users: res.totalUsers,
         });
-      } catch (error) {
-        console.error("Dashboard Stats Error:", error);
+      } catch (err) {
+        console.error(err);
       } finally {
         setLoading(false);
       }
-    }
+    };
 
     fetchStats();
   }, []);
 
   return { stats, loading };
-}
+};

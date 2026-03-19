@@ -7,6 +7,7 @@ import commentRoutes from "./modules/comment/comment.routes";
 import engagementRoutes from "./modules/engagement/engagement.routes";
 import newsRoutes from "./modules/news/news.routes";
 import userRoutes from "./modules/user/user.routes";
+import dashboardRoutes from "./modules/dashboard/dashboard.routes";
 
 import { errorHandler } from "./middlewares/error.middleware"; 
 
@@ -19,7 +20,7 @@ app.use("/api/comments", commentRoutes);
 app.use("/api/engagement", engagementRoutes);
 app.use("/api/news", newsRoutes);
 app.use("/api/users", userRoutes);
-
+app.use("/api/dashboard", dashboardRoutes);
 
 /* HEALTH CHECK */
 app.get("/health", (_req, res) => {

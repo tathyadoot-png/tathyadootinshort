@@ -26,7 +26,11 @@ export default function DashboardPage() {
           value={stats.news}
           color="text-blue-600"
         />
-
+        <StatCard
+          title="Published News"
+          value={stats.publishedNews}
+          color="text-purple-600"
+        />
         <StatCard
           title="Total Categories"
           value={stats.categories}
