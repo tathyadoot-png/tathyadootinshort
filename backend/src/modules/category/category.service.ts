@@ -22,8 +22,47 @@ export const createCategory = async (
 /**
  * Get All Categories
  */
-export const getAllCategories = async () => {
-  return await Category.find().sort({ order: 1 });
+export const getAllCategories = async (
+  page: number = 1,
+  limit: number = 10,
+  search?: string,
+  status?: string,
+  sort: string = "createdAt",
+  order: "asc" | "desc" = "desc"
+) => {
+  const skip = (page - 1) * limit;
+
+  const filter: any = {};
+
+  // 🔍 Search
+  if (search) {
+    filter.name = { $regex: search, $options: "i" };
+  }
+
+  // 📊 Status filter
+  if (status !== undefined && status !== "") {
+    filter.isActive = status === "true";
+  }
+
+  const sortOption: any = {
+    [sort]: order === "asc" ? 1 : -1,
+  };
+
+  const [data, total] = await Promise.all([
+    Category.find(filter)
+      .sort(sortOption)
+      .skip(skip)
+      .limit(limit),
+
+    Category.countDocuments(filter),
+  ]);
+
+  return {
+    total,
+    page,
+    totalPages: Math.ceil(total / limit),
+    data,
+  };
 };
 
 /**

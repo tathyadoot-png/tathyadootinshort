@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import * as categoryService from "./category.service";
 import { asyncHandler } from "../../middlewares/asyncHandler";
+import { getAllCategories } from "./category.service";
 
 
 interface MulterRequest extends Request {
@@ -24,15 +25,34 @@ export const createCategory = asyncHandler(
 /**
  * Get All Categories
  */
-export const getCategories = asyncHandler(
-  async (_req: Request, res: Response) => {
-    const categories =
-      await categoryService.getAllCategories();
+export const getCategories = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      search,
+      status,
+      sort,
+      order,
+    } = req.query;
 
-    res.json(categories);
+    const result = await getAllCategories(
+      Number(page),
+      Number(limit),
+      search as string,
+      status as string,
+      sort as string,
+      order as "asc" | "desc"
+    );
+
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching categories" });
   }
-);
-
+};
 /**
  * Get Active Categories
  */

@@ -1,8 +1,31 @@
 import { apiRequest } from "./api";
 
 // READ
-export const getUsers = () =>
-  apiRequest("/users");
+type GetUsersParams = {
+  page?: number;
+  search?: string;
+  status?: string;
+  sort?: string;
+  order?: string;
+};
+
+export const getUsers = ({
+  page = 1,
+  search = "",
+  status = "",
+  sort = "",
+  order = "",
+}: GetUsersParams) => {
+  const params = new URLSearchParams();
+
+  if (page) params.append("page", String(page));
+  if (search) params.append("search", search);
+  if (status) params.append("status", status);
+  if (sort) params.append("sort", sort);
+  if (order) params.append("order", order);
+
+  return apiRequest(`/users?${params.toString()}`);
+};
 
 export const getUserById = (id: string) =>
   apiRequest(`/users/${id}`);

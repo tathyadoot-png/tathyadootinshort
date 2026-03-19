@@ -98,9 +98,30 @@ export const updateUser = async (
   }
 };
 
-export const getAllUsers = async (_req: Request, res: Response) => {
-  const users = await userService.getAllUsers();
-  return res.json(users);
+export const getAllUsers = async (req: Request, res: Response) => {
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      search,
+      status,
+      sort,
+      order,
+    } = req.query;
+
+    const result = await userService.getAllUsers(
+      Number(page),
+      Number(limit),
+      search as string,
+      status as string,
+      sort as string,
+      order as "asc" | "desc"
+    );
+
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching users" });
+  }
 };
 
 export const updateRole = async (req: Request, res: Response) => {

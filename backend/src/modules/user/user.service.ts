@@ -190,8 +190,51 @@ export const getProfile = async (userId: string) => {
   return await User.findById(userId).select("-password");
 };
 
-export const getAllUsers = async () => {
-  return await User.find().select("-password");
+export const getAllUsers = async (
+  page: number = 1,
+  limit: number = 10,
+  search?: string,
+  status?: string,
+  sort: string = "createdAt",
+  order: "asc" | "desc" = "desc"
+) => {
+  const skip = (page - 1) * limit;
+
+  const filter: any = {};
+
+  // 🔍 Search
+  if (search) {
+    filter.$or = [
+      { name: { $regex: search, $options: "i" } },
+      { email: { $regex: search, $options: "i" } },
+    ];
+  }
+
+  // 📊 Status filter
+  if (status !== undefined && status !== "") {
+    filter.isActive = status === "true";
+  }
+
+  const sortOption: any = {
+    [sort]: order === "asc" ? 1 : -1,
+  };
+
+  const [data, total] = await Promise.all([
+    User.find(filter)
+      .select("-password")
+      .sort(sortOption)
+      .skip(skip)
+      .limit(limit),
+
+    User.countDocuments(filter),
+  ]);
+
+  return {
+    total,
+    page,
+    totalPages: Math.ceil(total / limit),
+    data,
+  };
 };
 
 export const updateUserRole = async (id: string, role: string) => {
